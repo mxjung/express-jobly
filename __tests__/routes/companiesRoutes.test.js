@@ -35,6 +35,53 @@ describe("Message Routes Test", function () {
       expect(response.body.companies.length).toEqual(3);
     });
   });
+
+  describe("POST /companies/", function () {
+    test("Creates a new company", async function () {
+      let response = await request(app)
+        .post("/companies/")
+        .send({
+          handle :"Fish",
+          name: "Fish tops",
+          num_employees : 80000,
+          description : "Fish shop",
+          logo_url : "http://fishworld.com/media/logo.jpg"
+        }
+        );
+      expect(response.statusCode).toBe(201);
+      expect(response.body.company).toHaveProperty("handle");
+    });
+
+    test("Fails on required fields", async function () {
+      let response = await request(app)
+        .post("/companies/")
+        .send({
+          handle :"Fishies",
+          num_employees : 6000,
+          description : "Tackle and bait store",
+          logo_url : "http://fishiesworld.com/media/logo.jpg"
+        }
+        );
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe("GET /companies/:handle", function () {
+    test("can get one company", async function () {
+      let response = await request(app)
+        .get("/companies/rithm");
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.company.name).toEqual("rithm school");
+    });
+
+    test("Can't get company that doesn't exist", async function () {
+      let response = await request(app)
+        .get("/companies/jetWest");
+
+      expect(response.statusCode).toBe(404);
+    });
+  });
 })
 
 afterAll(async function () {
