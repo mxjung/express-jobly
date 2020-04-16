@@ -1,5 +1,4 @@
 const express = require("express");
-const Company = require("../models/company");
 const Job = require("../models/job");
 const ExpressError = require("../helpers/expressError");
 const jsonschema = require("jsonschema");
@@ -12,7 +11,7 @@ const router = new express.Router();
  * Creates a new job and returns JSON of {job: jobData}
  */
 router.post("/", async function (req, res, next) {
-  
+
   try {
     let data = jsonschema.validate(req.body, jobSchema);
     if (!data.valid) {
@@ -34,12 +33,12 @@ router.post("/", async function (req, res, next) {
 router.get("/", async function (req, res, next) {
   const searchTerms = req.query;
   let jobs;
-  
+
   try {
     if (Object.keys(searchTerms).length === 0) {
       jobs = await Job.getAll();
     } else {
-      jobs = await Job.getFiltered(searchTerms);       
+      jobs = await Job.getFiltered(searchTerms);
     }
 
     // If no jobs, just return empty object
@@ -55,13 +54,12 @@ router.get("/", async function (req, res, next) {
  */
 router.get("/:id", async function (req, res, next) {
 
-  try{
-    // console.log('INSIDE TRY BEFORE GETONE CALL');
+  try {
     const id = Number(req.params.id);
     const job = await Job.getOne(id);
-    
+
     return res.json({ job });
-  }catch(err){
+  } catch (err) {
     return next(err)
   }
 });
@@ -72,7 +70,7 @@ router.get("/:id", async function (req, res, next) {
  */
 router.patch("/:id", async function (req, res, next) {
 
-  try{
+  try {
 
     if (Object.keys(req.body).length === 0) {
       throw new ExpressError('Need data to patch', 400);
@@ -88,12 +86,25 @@ router.patch("/:id", async function (req, res, next) {
     }
 
     let job = await Job.patchJob(req.body, req.params.id);
+    // updateJob (patch not good name)********
     return res.status(201).json({ job });
-  }catch(err){
+    // 200 ok*********** (201 for created)
+  } catch (err) {
     return next(err)
   }
 });
 
-
+/** DELETE
+ * This should remove an existing job and return a message.
+ * This should return JSON of {message: "Job deleted"}
+ */
+router.delete("/:id", async function (req, res, next) {
+  try {
+    await Job.deleteJob(req.params.id);
+    return res.json({ message: "Job deleted" });
+  } catch (err) {
+    return next(err)
+  }
+});
 
 module.exports = router;

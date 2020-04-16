@@ -13,18 +13,14 @@ class Job {
 
   static async getAll() {
     const jobRes = await db.query(
-        `SELECT id,
+      `SELECT id,
                 title,
                 salary,
                 equity,
                 company_handle,
                 date_posted
             FROM jobs`);
-          
-    // if (jobRes.rows.length === 0) {
-    //   throw new expressError(`There are no jobs posted`, 404);
-    // }
-    // return empty****
+
     return jobRes.rows;
   }
 
@@ -35,47 +31,43 @@ class Job {
    * */
 
   static async getFiltered(searchTerms) {
-    const {query, values} = jobSearch(searchTerms);
+    const { query, values } = jobSearch(searchTerms);
     const jobRes = await db.query(query, values);
+    // try/catch just in case ********
 
     return jobRes.rows;
   }
 
   static async create(data) {
     let jobRes;
-    try{
-    jobRes = await db.query(
-      `INSERT INTO jobs (
+    try {
+      jobRes = await db.query(
+        `INSERT INTO jobs (
           title,
           salary,
           equity,
-          company_handle,
-          date_posted) 
-         VALUES ($1, $2, $3, $4, current_timestamp) 
+          company_handle) 
+         VALUES ($1, $2, $3, $4) 
          RETURNING 
           id,
           title,
           salary,
           equity,
-          company_handle,
-          date_posted`,
-      [
-        data.title,
-        data.salary,
-        data.equity,
-        data.company_handle,
-      ]
-    );
-    }catch(err){
+          company_handle`,
+        [
+          data.title,
+          data.salary,
+          data.equity,
+          data.company_handle,
+        ]
+      );
+      // destructure data******
+    } catch (err) {
       throw new expressError(err.message, 400)
     }
-    
-    if (jobRes.rows.length === 0) {
-      throw new expressError(`Unable to create record for this job`, 500);
-    }
-    // do not need above if statement*****
 
     return jobRes.rows[0];
+    // place inside try ********
   }
 
   /** Return one job object for given id:
@@ -85,9 +77,8 @@ class Job {
    * */
 
   static async getOne(id) {
-    // console.log('INSIDE GETONE, ID: ', id);
     const jobRes = await db.query(
-        `SELECT id,
+      `SELECT id,
                 title,
                 salary,
                 equity,
@@ -95,13 +86,11 @@ class Job {
                 date_posted
             FROM jobs
             WHERE id=$1`,
-            [id]);
-      
-    // console.log('jobRes id: ', jobRes);
-     
-    
+      [id]);
+
     if (jobRes.rows.length === 0) {
       throw new expressError(`There is no record for job with id: ${id}`, 404);
+      // import expressError as ExpressError since class (capitalize)********
     }
     return jobRes.rows[0];
   }
@@ -114,41 +103,38 @@ class Job {
 
   static async patchJob(data, id) {
     let jobRes;
-    try{
-      const {query, values} = sqlForPartialUpdate('jobs', data, 'id', id);
-      // console.log('PARTIAL UPDATE: ', query, values);
+    try {
+      const { query, values } = sqlForPartialUpdate('jobs', data, 'id', id);
       jobRes = await db.query(query, values);
-      // console.log('JOBRES: ', jobRes);
     } catch (err) {
       throw new expressError(err.message, 400)
     }
-    
-    // if (jobRes.rows.length === 0) {
-    //   throw new expressError(`There is no record for job with id: ${id}, cannot update`, 404);
-    // }
+
+    if (jobRes.rows.length === 0) {
+      throw new expressError(`There is no record for job with id: ${id}, cannot update`, 404);
+    }
     return jobRes.rows[0];
   }
 
-//   /** Return one company object {handle} for given handle after deleting:
-//    *
-//    * => {handle}
-//    *
-//    * */
+  /** Deletes job from DB with input id:
+   *
+   * */
 
-//   static async deleteCompany(handle) {
-    
-//     const companyRes = await db.query(
-//       `DELETE FROM companies 
-//          WHERE handle = $1 
-//          RETURNING handle`,
-//         [handle]);
+  static async deleteJob(id) {
 
-//     if (companyRes.rows.length === 0) {
-//       throw { message: `There is no company with an handle: ${handle}`, status: 404 };
-//     }
+    const jobRes = await db.query(
+      `DELETE FROM jobs 
+         WHERE id = $1 
+         RETURNING id`,
+      [id]);
 
-//     return companyRes.rows[0];
-//   }
+    if (jobRes.rows.length === 0) {
+      throw { message: `There is no job with an id: ${id}`, status: 404 };
+      // throw express error********
+    }
+
+    return jobRes.rows[0];
+  }
 }
 
 

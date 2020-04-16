@@ -5,7 +5,7 @@ const db = require("../../db");
 
 process.env.NODE_ENV = 'test';
 
-describe("Message Routes Test", function () {
+describe("Job Routes Test", function () {
   beforeEach(async function () {
     await db.query("DELETE FROM jobs");
     await db.query("DELETE FROM companies");
@@ -37,6 +37,8 @@ describe("Message Routes Test", function () {
       (100002, 'Front end developer',120000, 0.05,'rithm',current_timestamp),
       (100003, 'Marketing Application manager',120000, 0.05, 'goog',current_timestamp);`
     );
+
+    // think about moving this to script and running each time**********
   });
 
   describe("POST /jobs/", function () {
@@ -51,6 +53,7 @@ describe("Message Routes Test", function () {
         });
       expect(response.statusCode).toBe(201);
       expect(response.body.job).toHaveProperty("salary");
+      // nibbling (use toEqual)********
     });
 
     test("Fails on required fields", async function () {
@@ -62,6 +65,7 @@ describe("Message Routes Test", function () {
             company_handle: "goog",
         });
       expect(response.status).toBe(400);
+      // error msg*********
     });
   });
 
@@ -153,14 +157,39 @@ describe("Message Routes Test", function () {
     });
 
     test("cannot patch company if non-existent id", async function () {
+
+      // const resp = await db.query('SELECT * FROM jobs');
+      // console.log(resp.rows);
       let response = await request(app)
-        .patch("/jobs/10000200000")
+        .patch("/jobs/10")
         .send({'salary': 200000});
 
-        expect(response.statusCode).toBe(400); // HTTP status
-        expect(response.body.status).toBe(400); // body of response status
-        // expect(response.body.message).toBe(`There is no record for job with id: 10000200000, cannot update`);
-        console.log('ERROR MESSAGE: ', response.body.message);
+        expect(response.statusCode).toBe(404); // HTTP status
+        expect(response.body.status).toBe(404); // body of response status
+        expect(response.body.message).toBe(`There is no record for job with id: 10, cannot update`);
+        // console.log('ERROR MESSAGE: ', response.body.message);
+    });
+  });
+
+  describe("DELETE /jobs/:id", function () {
+    test("can delete job", async function () {
+      let response = await request(app)
+        .delete("/jobs/100002")
+
+      expect(response.statusCode).toBe(200);
+
+      // Check we only have 3 jobs left now
+      const jobs = await request(app)
+        .get("/jobs");
+      expect(jobs.body.jobs.length).toEqual(3);
+    });
+
+    test("cannot delete job if non-existent id", async function () {
+      let response = await request(app)
+        .delete("/jobs/10")
+
+      expect(response.statusCode).toBe(404);
+      expect(response.body.message).toBe('There is no job with an id: 10');
     });
 
   });

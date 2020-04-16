@@ -22,6 +22,17 @@ describe("Message Routes Test", function () {
       ('goog','google', '2000','google search','url2'),
       ('rithm','rithm school', '60','making developers','url3');`
     );
+
+    await db.query(
+      `INSERT INTO jobs (
+        id, 
+        title,
+        salary,
+        equity,
+        company_handle,
+        date_posted
+            )       
+      VALUES (100002, 'Front end developer',120000, 0.05,'rithm',current_timestamp)`)
   })
 
   /** GET / => {companies: [company, ...]}  */
@@ -41,11 +52,11 @@ describe("Message Routes Test", function () {
       let response = await request(app)
         .post("/companies/")
         .send({
-          handle :"Fish",
+          handle: "Fish",
           name: "Fish tops",
-          num_employees : 80000,
-          description : "Fish shop",
-          logo_url : "http://fishworld.com/media/logo.jpg"
+          num_employees: 80000,
+          description: "Fish shop",
+          logo_url: "http://fishworld.com/media/logo.jpg"
         }
         );
       expect(response.statusCode).toBe(201);
@@ -56,10 +67,10 @@ describe("Message Routes Test", function () {
       let response = await request(app)
         .post("/companies/")
         .send({
-          handle :"Fishies",
-          num_employees : 6000,
-          description : "Tackle and bait store",
-          logo_url : "http://fishiesworld.com/media/logo.jpg"
+          handle: "Fishies",
+          num_employees: 6000,
+          description: "Tackle and bait store",
+          logo_url: "http://fishiesworld.com/media/logo.jpg"
         }
         );
       expect(response.status).toBe(400);
@@ -73,6 +84,9 @@ describe("Message Routes Test", function () {
 
       expect(response.statusCode).toBe(200);
       expect(response.body.company.name).toEqual("rithm school");
+
+      // Test how many jobs are associated with rithm school
+      expect(response.body.company.jobs.length).toEqual(1);
     });
 
     test("Can't get company that doesn't exist", async function () {
@@ -87,12 +101,14 @@ describe("Message Routes Test", function () {
     test("can patch company", async function () {
       let response = await request(app)
         .patch("/companies/appl")
-        .send({'handle':'grapes','description':'best winery'});
+        .send({ 'handle': 'grapes', 'description': 'best winery' });
 
       expect(response.statusCode).toBe(201);
       expect(response.body.company).toEqual(
-        {'handle': 'grapes', 'name': 'apple', 
-        'description': 'best winery', 'num_employees': 1000, 'logo_url': 'url1'}
+        {
+          'handle': 'grapes', 'name': 'apple',
+          'description': 'best winery', 'num_employees': 1000, 'logo_url': 'url1'
+        }
       );
     });
 
@@ -107,11 +123,11 @@ describe("Message Routes Test", function () {
     test("cannot patch company if non-existent handle", async function () {
       let response = await request(app)
         .patch("/companies/oranges")
-        .send({'description':'best winery'});
+        .send({ 'description': 'best winery' });
 
-        expect(response.statusCode).toBe(404); // HTTP status
-        expect(response.body.status).toBe(404); // body of response status
-        expect(response.body.message).toBe('There is no record for oranges');
+      expect(response.statusCode).toBe(404); // HTTP status
+      expect(response.body.status).toBe(404); // body of response status
+      expect(response.body.message).toBe('There is no record for oranges');
     });
 
   });

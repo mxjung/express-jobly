@@ -47,14 +47,19 @@ router.post("/", async function (req, res, next) {
 });
 
 /** GET 
+ * OLD REQUIREMENT
  * This should return a single company found by its id.
  * This should return JSON of {company: companyData}
+ * 
+ * NEW REQUIREMENT
+ * This should return a single company found by its id. It should also return a key of jobs which is an array of jobs that belong to that company: {company: {...companyData, jobs: [job, ...]}}
  */
 router.get("/:handle", async function (req, res, next) {
   try{
     const handle = req.params.handle;
     const company = await Company.getOne(handle);
-    
+    const jobs = await Company.getJobs(handle);
+    company.jobs = jobs;
     return res.json({ company });
   }catch(err){
     return next(err)

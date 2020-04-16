@@ -11,7 +11,7 @@ const expressError = require('./expressError');
  */
 
 function sqlForJobSearch(searchTerms) {
-
+  // destructure searchTerms in parameter input*****
   let idx = 1;
   let columns = [];
   let values = [];

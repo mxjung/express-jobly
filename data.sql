@@ -17,7 +17,17 @@ CREATE TABLE jobs (
     salary REAL NOT NULL,
     equity REAL NOT NULL CHECK (equity<=1) CHECK (equity>=0),
     company_handle text NOT NULL REFERENCES companies ON DELETE CASCADE,
-    date_posted timestamp with time zone
+    date_posted timestamp with time zone DEFAULT current_timestamp
+);
+
+CREATE TABLE users (
+    username text PRIMARY KEY,
+    password text NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    email text NOT NULL UNIQUE,
+    photo_url text,
+    is_admin BOOLEAN DEFAULT FALSE NOT NULL
 );
 
 INSERT INTO companies (
@@ -43,3 +53,19 @@ INSERT INTO jobs (
             ('Junior Software developer',110000, 0,'appl',current_timestamp),
             ('Front end developer',120000, 0.05,'rithm',current_timestamp),
             ('Marketing manager',120000, 0.05, 'goog',current_timestamp);
+
+
+INSERT INTO users (
+                  username,
+                  password,
+                  first_name,
+                  last_name,
+                  email,
+                  photo_url,
+                  is_admin
+                      )       
+    VALUES ('user1','password1', 'barry','james','email1', 'photo1', True),
+            ('user2','password2', 'jamie','chow','email2', 'photo2', True),
+            ('user3','password3', 'hector','achilles','email3', 'photo3', True),
+            ('user4','password4', 'penelope','ody','email4', 'photo4', True),
+            ('user5','password5', 'arthur','happy','email5', 'photo5', True);
