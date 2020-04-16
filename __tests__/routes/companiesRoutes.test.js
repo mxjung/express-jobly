@@ -82,6 +82,62 @@ describe("Message Routes Test", function () {
       expect(response.statusCode).toBe(404);
     });
   });
+
+  describe("PATCH /companies/:handle", function () {
+    test("can patch company", async function () {
+      let response = await request(app)
+        .patch("/companies/appl")
+        .send({'handle':'grapes','description':'best winery'});
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body.company).toEqual(
+        {'handle': 'grapes', 'name': 'apple', 
+        'description': 'best winery', 'num_employees': 1000, 'logo_url': 'url1'}
+      );
+    });
+
+    test("cannot patch company if no body", async function () {
+      let response = await request(app)
+        .patch("/companies/appl")
+
+      expect(response.statusCode).toBe(400);
+      // 'Need data to patch'
+    });
+
+    test("cannot patch company if non-existent handle", async function () {
+      let response = await request(app)
+        .patch("/companies/oranges")
+        .send({'description':'best winery'});
+
+        expect(response.statusCode).toBe(404); // HTTP status
+        expect(response.body.status).toBe(404); // body of response status
+        expect(response.body.message).toBe('There is no record for oranges');
+    });
+
+  });
+
+  describe("DELETE /companies/:handle", function () {
+    test("can delete company", async function () {
+      let response = await request(app)
+        .delete("/companies/appl")
+
+      expect(response.statusCode).toBe(200);
+
+      // Check we only have 2 companies left now
+      const companies = await request(app)
+        .get("/companies");
+      expect(companies.body.companies.length).toEqual(2);
+    });
+
+    test("cannot delete company if non-existent handle", async function () {
+      let response = await request(app)
+        .delete("/companies/oranges")
+
+      expect(response.statusCode).toBe(404);
+      // `There is no company with an handle: oranges`
+    });
+
+  });
 })
 
 afterAll(async function () {

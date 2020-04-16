@@ -3,32 +3,25 @@ const expressError = require('./expressError');
 /**
  * Generate a selective update query based on a request body:
  *
- * - table: where to make the query
- * - items: an object with keys of columns you want to update and values with
- *          updated values
- * - key: the column that we query by (e.g. username, handle, id)
- * - id: current record ID
+ * - searchTerms: an object with keys of columns you want to search and values 
+ * that signifies WHERE and LIKE constraints
  *
- * Returns object containing a DB query as a string, and array of
- * string values to be updated
+ * Returns object containing a DB query as a string, and array of string values to be inserted
  *
  */
 
 function sqlForCompanySearch(searchTerms) {
-  // keep track of item indexes
-  // store all the columns we want to update and associate with vals
-
+  
+  // Error out if min > max employees
   if (searchTerms.min_employees && 
       searchTerms.max_employees &&
-      searchTerms.min_employees > searchTerms.max_employees) {
+      Number(searchTerms.min_employees) > Number(searchTerms.max_employees)) {
     throw new expressError('Max Employees cannot be less than Min Employees', 400);
   }
 
   let idx = 1;
   let columns = [];
-  // let values = Object.values(searchTerms);
   let values = [];
-
 
   for (let searchTerm in searchTerms) {
     if (searchTerm === 'min_employees') {
