@@ -10,7 +10,7 @@ describe("sqlForCompanySearch()", () => {
         { 'search': 'appl'},
       );
       
-      expect(queryObj.query).toBe('SELECT handle, name, num_employees, description, logo_url FROM companies WHERE (handle LIKE $1 OR name LIKE $1)');
+      expect(queryObj.query).toBe('SELECT handle, name, num_employees, description, logo_url FROM companies WHERE (handle ILIKE $1 OR name ILIKE $1)');
       expect(queryObj.values).toEqual(['%appl%']);
     });
 
@@ -20,7 +20,7 @@ describe("sqlForCompanySearch()", () => {
         { 'search': 'appl', 'min_employees': 40, 'max_employees': 50 },
       );
 
-      expect(queryObj.query).toBe('SELECT handle, name, num_employees, description, logo_url FROM companies WHERE (handle LIKE $1 OR name LIKE $1) AND num_employees>$2 AND num_employees<$3');
+      expect(queryObj.query).toBe('SELECT handle, name, num_employees, description, logo_url FROM companies WHERE (handle ILIKE $1 OR name ILIKE $1) AND num_employees>$2 AND num_employees<$3');
       expect(queryObj.values).toEqual(['%appl%', 40, 50]);
     });
 

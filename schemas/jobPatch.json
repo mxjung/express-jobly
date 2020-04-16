@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "The Job Schema",
+  "description": "Schema for jobs posted to Jobly database.",
+  "default": {},
+  "additionalProperties": true,
+  "properties": {
+      "title": {
+          "$id": "#/properties/title",
+          "type": "string",
+          "title": "The Title Schema",
+          "description": "Job title",
+          "default": "",
+          "examples": [
+              "Senior Software developer"
+          ]
+      },
+      "salary": {
+          "$id": "#/properties/salary",
+          "type": "number",
+          "title": "The Salary Schema",
+          "description": "Salary offered.",
+          "default": 0,
+          "examples": [
+              160000.0
+          ]
+      },
+      "equity": {
+          "$id": "#/properties/equity",
+          "type": "number",
+          "title": "The Equity Schema",
+          "description": "percentage of equity offered (as a number between 0 and 1).",
+          "default": 0,
+          "examples": [
+            0.1
+        ],
+          "maximum": 1.0,
+          "minimum": 0.0
+      },
+      "company_handle": {
+          "$id": "#/properties/company_handle",
+          "type": "string",
+          "title": "The Company_handle Schema",
+          "description": "Foreign key refering to the company the job is posted for.",
+          "default": "",
+          "examples": [
+              "appl"
+          ]
+      },
+      "date_posted": {
+          "$id": "#/properties/date_posted",
+          "type": "string",
+          "format": "date-time",
+          "title": "The Date_posted Schema",
+          "description": "Date job is posted.",
+          "default": "",
+          "examples": [
+              "2018-11-13T20:20:39+00:00"
+          ]
+      }
+  }
+}

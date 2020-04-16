@@ -31,8 +31,8 @@ function sqlForCompanySearch(searchTerms) {
       columns.push(`num_employees<$${idx}`);
       values.push(searchTerms.max_employees);
     } else {
-      // This is search
-      columns.push(`(handle LIKE $${idx} OR name LIKE $${idx})`);
+      // This is search (ILIKE - considers upper/lowercase)
+      columns.push(`(handle ILIKE $${idx} OR name ILIKE $${idx})`);
       values.push(`%${searchTerms.search}%`);
     }
     idx += 1;

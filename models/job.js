@@ -1,48 +1,45 @@
 const db = require("../db");
 const expressError = require('../helpers/expressError');
-const companySearch = require('../helpers/companySearch');
+const jobSearch = require('../helpers/jobSearch');
 const sqlForPartialUpdate = require('../helpers/partialUpdate');
 
 class Job {
 
-//   /** Return array of company data:
-//    *
-//    * => [ {handle, name, num_employees,...}, {handle, ...}...]
-//    *
-//    * */
+  /** Return array of job data:
+   *
+   * => [ {title, salary,...}, {title, salary...}...]
+   *
+   * */
 
-//   static async getAll() {
-//     const companyRes = await db.query(
-//         `SELECT handle,
-//                 name,
-//                 num_employees,
-//                 description,
-//                 logo_url
-//             FROM companies`);
+  static async getAll() {
+    const jobRes = await db.query(
+        `SELECT id,
+                title,
+                salary,
+                equity,
+                company_handle,
+                date_posted
+            FROM jobs`);
           
+    // if (jobRes.rows.length === 0) {
+    //   throw new expressError(`There are no jobs posted`, 404);
+    // }
+    // return empty****
+    return jobRes.rows;
+  }
 
-//     if (companyRes.rows.length === 0) {
-//       throw new expressError(`There are no companies`, 404);
-//     }
-//     // return empty****
-//     return companyRes.rows;
-//   }
+  /** Return array of filtered job data for search terms:
+   *
+   * => [ {title, salary,...}, {title, salary...}...]
+   *
+   * */
 
-//   /** Return array of filtered company data for search terms:
-//    *
-//    * => [ {handle, name, num_employees,...}, {handle, ...}...]
-//    *
-//    * */
+  static async getFiltered(searchTerms) {
+    const {query, values} = jobSearch(searchTerms);
+    const jobRes = await db.query(query, values);
 
-//   static async getFiltered(searchTerms) {
-//     const {query, values} = companySearch(searchTerms);
-//     const companyRes = await db.query(query, values);
-
-//     if (companyRes.rows.length === 0) {
-//       throw new expressError(`There are no companies`, 404);
-//     }
-//     return companyRes.rows;
-//   }
+    return jobRes.rows;
+  }
 
   static async create(data) {
     let jobRes;
@@ -81,45 +78,56 @@ class Job {
     return jobRes.rows[0];
   }
 
-//   /** Return one company object for given handle:
-//    *
-//    * => {handle, name, num_employees,...}
-//    *
-//    * */
+  /** Return one job object for given id:
+   *
+   * => {id, title, salary,...}
+   *
+   * */
 
-//   static async getOne(handle) {
-//     const companyRes = await db.query(
-//         `SELECT handle,
-//                 name,
-//                 num_employees,
-//                 description,
-//                 logo_url
-//             FROM companies
-//             WHERE handle=$1`,
-//             [handle]);
-  
-//     if (companyRes.rows.length === 0) {
-//       throw new expressError(`There is no record for ${handle}`, 404);
-//     }
-//     return companyRes.rows[0];
-//   }
+  static async getOne(id) {
+    // console.log('INSIDE GETONE, ID: ', id);
+    const jobRes = await db.query(
+        `SELECT id,
+                title,
+                salary,
+                equity,
+                company_handle,
+                date_posted
+            FROM jobs
+            WHERE id=$1`,
+            [id]);
+      
+    // console.log('jobRes id: ', jobRes);
+     
+    
+    if (jobRes.rows.length === 0) {
+      throw new expressError(`There is no record for job with id: ${id}`, 404);
+    }
+    return jobRes.rows[0];
+  }
 
-//   /** Return one company object for given handle after patching:
-//    *
-//    * => {handle, name, num_employees,...}
-//    *
-//    * */
+  /** Return one job object for given handle after patching:
+   *
+   * => {id, title, salary,...}
+   *
+   * */
 
-//   static async patchCompany(data, handle) {
-
-//     const {query, values} = sqlForPartialUpdate('companies', data, 'handle', handle);
-//     const companyRes = await db.query(query, values);
-  
-//     if (companyRes.rows.length === 0) {
-//       throw new expressError(`There is no record for ${handle}, cannot update`, 404);
-//     }
-//     return companyRes.rows[0];
-//   }
+  static async patchJob(data, id) {
+    let jobRes;
+    try{
+      const {query, values} = sqlForPartialUpdate('jobs', data, 'id', id);
+      // console.log('PARTIAL UPDATE: ', query, values);
+      jobRes = await db.query(query, values);
+      // console.log('JOBRES: ', jobRes);
+    } catch (err) {
+      throw new expressError(err.message, 400)
+    }
+    
+    // if (jobRes.rows.length === 0) {
+    //   throw new expressError(`There is no record for job with id: ${id}, cannot update`, 404);
+    // }
+    return jobRes.rows[0];
+  }
 
 //   /** Return one company object {handle} for given handle after deleting:
 //    *
