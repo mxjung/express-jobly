@@ -1,5 +1,6 @@
 \c jobly-test
 
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS jobs;
 DROP TABLE IF EXISTS companies;
 

@@ -1,5 +1,6 @@
 \c jobly
 
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS jobs;
 DROP TABLE IF EXISTS companies;
 
@@ -64,8 +65,8 @@ INSERT INTO users (
                   photo_url,
                   is_admin
                       )       
-    VALUES ('user1','password1', 'barry','james','email1', 'photo1', True),
-            ('user2','password2', 'jamie','chow','email2', 'photo2', True),
-            ('user3','password3', 'hector','achilles','email3', 'photo3', True),
-            ('user4','password4', 'penelope','ody','email4', 'photo4', True),
-            ('user5','password5', 'arthur','happy','email5', 'photo5', True);
+    VALUES ('user1','password1', 'barry','james','email1', 'photo1', TRUE),
+            ('user2','password2', 'jamie','chow','email2', 'photo2', TRUE),
+            ('user3','password3', 'hector','achilles','email3', 'photo3', FALSE),
+            ('user4','password4', 'penelope','ody','email4', 'photo4', FALSE),
+            ('user5','password5', 'arthur','happy','email5', 'photo5', FALSE);
