@@ -10,6 +10,7 @@ process.env.NODE_ENV = 'test';
 
 // Global Variable Token for user1
 let testUserToken1;
+let testUserToken2;
 
 
 describe("Job Routes Test", function () {
@@ -65,10 +66,13 @@ describe("Job Routes Test", function () {
     const testUser1 = { username: 'user1', is_admin: true };
     testUserToken1 = jwt.sign(testUser1, SECRET_KEY);
 
+    const testUser2 = { username: 'user2', is_admin: false };
+    testUserToken2 = jwt.sign(testUser2, SECRET_KEY);
+
   });
 
   describe("POST /jobs/", function () {
-    test("Creates a new job", async function () {
+    test("Creates a new job if admin", async function () {
       let response = await request(app)
         .post("/jobs/")
         .send({
@@ -76,6 +80,7 @@ describe("Job Routes Test", function () {
           salary: 80000,
           equity: 0.05,
           company_handle: "goog",
+          _token: testUserToken1
         });
       expect(response.statusCode).toBe(201);
       expect(response.body.job).toHaveProperty("salary");
@@ -89,9 +94,27 @@ describe("Job Routes Test", function () {
             title: "Instructor",
             equity: 0.05,
             company_handle: "goog",
+            _token: testUserToken1
         });
       expect(response.status).toBe(400);
       // error msg*********
+    });
+
+    test("Cannot create a new job if not admin", async function () {
+      let response = await request(app)
+        .post("/jobs/")
+        .send({
+          title: "Instructor",
+          salary: 80000,
+          equity: 0.05,
+          company_handle: "goog",
+          _token: testUserToken2
+        });
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({
+        message: 'Unauthorized',
+        status: 401
+      });
     });
   });
 
@@ -194,10 +217,11 @@ describe("Job Routes Test", function () {
   /** PATCH / => {job: {job}}  */
   
   describe("PATCH /jobs/:handle", function () {
-    test("can patch company", async function () {
+    test("can patch company if admin", async function () {
       let response = await request(app)
         .patch("/jobs/100002")
-        .send({'salary': 200000});
+        .send({'salary': 200000,
+              _token: testUserToken1});
 
       expect(response.statusCode).toBe(201);
       expect(response.body.job.salary).toEqual(200000);
@@ -206,6 +230,7 @@ describe("Job Routes Test", function () {
     test("cannot patch job if no body", async function () {
       let response = await request(app)
         .patch("/jobs/100002")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toBe('Need data to patch');
@@ -217,19 +242,34 @@ describe("Job Routes Test", function () {
       // console.log(resp.rows);
       let response = await request(app)
         .patch("/jobs/10")
-        .send({'salary': 200000});
+        .send({'salary': 200000,
+                _token: testUserToken1});
 
         expect(response.statusCode).toBe(404); // HTTP status
         expect(response.body.status).toBe(404); // body of response status
         expect(response.body.message).toBe(`There is no record for job with id: 10, cannot update`);
         // console.log('ERROR MESSAGE: ', response.body.message);
     });
+
+    test("cannot patch company if not admin", async function () {
+      let response = await request(app)
+        .patch("/jobs/100002")
+        .send({'salary': 200000,
+              _token: testUserToken2});
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({
+        message: 'Unauthorized',
+        status: 401
+      });
+    });
   });
 
   describe("DELETE /jobs/:id", function () {
-    test("can delete job", async function () {
+    test("can delete job if admin", async function () {
       let response = await request(app)
         .delete("/jobs/100002")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(200);
 
@@ -244,13 +284,24 @@ describe("Job Routes Test", function () {
     test("cannot delete job if non-existent id", async function () {
       let response = await request(app)
         .delete("/jobs/10")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toBe('There is no job with an id: 10');
     });
 
-  });
+    test("cannot delete job if not admin", async function () {
+      let response = await request(app)
+        .delete("/jobs/100002")
+        .send({_token: testUserToken2});
 
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({
+        message: 'Unauthorized',
+        status: 401
+      });
+    });
+  });
 });
 
 

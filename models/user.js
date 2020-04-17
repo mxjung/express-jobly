@@ -103,11 +103,12 @@ class User {
             WHERE username=$1`,
       [username]);
 
-    if (userRes.rows.length === 0) {
+    let user = userRes.rows[0]
+    if (!user) {
       throw new ExpressError(`There is no record for ${username}`, 404);
       // import expressError as ExpressError since class (capitalize)********
     }
-    return userRes.rows[0];
+    return user;
   }
 
   /** Return one job object for given handle after patching:

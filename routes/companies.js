@@ -84,7 +84,7 @@ router.patch("/:handle",
 
     try {
 
-      if (Object.keys(req.body).length === 0) {
+      if (Object.keys(req.body).length === 1) {
         throw new ExpressError('Need data to patch', 400);
       }
       // User may patch any values, however, we require handle and name in 

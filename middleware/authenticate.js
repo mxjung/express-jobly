@@ -35,7 +35,7 @@ function ensureLoggedIn(req, res, next) {
 /** Require admin user or raise 401 */
 
 function ensureAdmin(req, res, next) {
-  if (!req.user || req.user.is_admin) {
+  if (!req.user.is_admin) {
     const err = new ExpressError("Unauthorized", 401);
     return next(err);
   } else {
@@ -51,7 +51,7 @@ function ensureCorrectUser(req, res, next) {
     if (req.user.username === req.params.username) {
       return next();
     } else {
-      return next({ status: 401, message: "Unauthorized" });
+      throw new ExpressError();
     }
   } catch (err) {
     // errors would happen here if we made a request and req.user is undefined

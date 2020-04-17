@@ -43,7 +43,7 @@ describe("Auth Routes Test", function () {
         });
 
       expect(response.statusCode).toBe(200);
-      expect(response.body).toHaveProperty('token');
+      expect(response.body).toEqual({token:expect.any(str)});
     });
 
     test("Posts invalid username, password: returns error msg", async function () {
