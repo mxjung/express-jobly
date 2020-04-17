@@ -2,8 +2,15 @@ const request = require("supertest");
 
 const app = require("../../app");
 const db = require("../../db");
+const jwt = require("jsonwebtoken");
+const { SECRET_KEY } = require("../../config");
 
 process.env.NODE_ENV = 'test';
+
+
+
+// Global Variable Token for user1
+let testUserToken1;
 
 describe("User Routes Test", function () {
   beforeEach(async function () {
@@ -55,6 +62,10 @@ describe("User Routes Test", function () {
     ('user5','password5', 'arthur','happy','email5', 'photo5', FALSE)`)
 
     // think about moving this to script and running each time**********
+
+    // we'll need tokens for future requests
+    const testUser1 = { username: 'user1', is_admin: true };
+    testUserToken1 = jwt.sign(testUser1, SECRET_KEY);
   });
 
   describe("POST /users/", function () {
@@ -71,14 +82,17 @@ describe("User Routes Test", function () {
           "is_admin": false
         });
       expect(response.statusCode).toBe(201);
-      expect(response.body.user).toEqual({
-        "username": "user6",
-        "first_name": "Jamie",
-        "last_name": "chow",
-        "email": "email6@gmail.com",
-        "photo_url": "http://www.somedomain.com/me.jpg",
-        "is_admin": false
-      });
+      // expect(response.body.user).toEqual({
+      //   "username": "user6",
+      //   "first_name": "Jamie",
+      //   "last_name": "chow",
+      //   "email": "email6@gmail.com",
+      //   "photo_url": "http://www.somedomain.com/me.jpg",
+      //   "is_admin": false
+      // });
+
+      // with authentication, we just want to receive a token
+      expect(response.body).toHaveProperty('token');
 
     });
     test("Fails when incorrect data supplied", async function () {
@@ -121,6 +135,7 @@ describe("User Routes Test", function () {
       );
     });
   });
+
   describe("Get /users/", function () {
     test("Gets all users", async function () {
       let response = await request(app)
@@ -136,6 +151,7 @@ describe("User Routes Test", function () {
       expect(response.body.users.length).toEqual(5);
     });
   });
+
   describe("Get /users/:username", function () {
     test("Gets user by username", async function () {
       let response = await request(app)
@@ -159,50 +175,70 @@ describe("User Routes Test", function () {
       expect(response.body.message).toEqual("There is no record for user454");
     });
   });
+
+
   describe("Update /users/:username", function () {
-    test("Updates user by username", async function () {
+    test("Updates user by username IF authenticated", async function () {
       let response = await request(app)
-        .patch("/users/user4")
+        .patch("/users/user1")
         .send( {		
           "first_name": "changed again",
           "last_name": "this too",
-          "email": "emailchanged"
+          "email": "emailchanged",
+          _token : testUserToken1
           }
 
         );
 
       expect(response.statusCode).toBe(200);
       expect(response.body.user).toEqual( {
-        "username": "user4",
+        "username": "user1",
         "first_name": "changed again",
         "last_name": "this too",
         "email": "emailchanged",
-        "photo_url": "photo4"
+        "photo_url": "photo1"
       });
-    });
+    })
+
     test("Fails for user that doesn't exist", async function () {
       let response = await request(app)
         .patch("/users/user454")
         .send({		
           "first_name": "changed again",
           "last_name": "this too",
-          "email": "emailchanged2"
+          "email": "emailchanged2",
+          _token : testUserToken1
           });
 
-      expect(response.statusCode).toBe(404);
-      expect(response.body.message).toEqual("There is no record for user454, cannot update");
+      expect(response.statusCode).toBe(401);
+      // expect(response.body.message).toEqual("There is no record for user454, cannot update");
+      expect(response.body).toEqual({ status: 401, message: "Unauthorized" });
     });
+    
     test("Fails for when email is non-unique", async function () {
       let response = await request(app)
-        .patch("/users/user4")
+        .patch("/users/user1")
         .send({		
           "first_name": "changed again",
           "last_name": "this too",
-          "email": "email1"
+          "email": "email3",
+          _token : testUserToken1
           });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toEqual('duplicate key value violates unique constraint \"users_email_key\"');
+    });
+
+    test("Cannot update user IF NOT authenticated", async function () {
+      let response = await request(app)
+        .patch("/users/user1")
+        .send( {		
+          "first_name": "changed again",
+          "last_name": "this too",
+          "email": "emailchanged",
+          });
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({ status: 401, message: "Unauthorized" });
     });
   });
 
@@ -211,6 +247,7 @@ describe("User Routes Test", function () {
     test("can delete user", async function () {
       let response = await request(app)
         .delete("/users/user1")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
@@ -219,19 +256,31 @@ describe("User Routes Test", function () {
 
       // Check we only have 4 users left now
       const users = await request(app)
-        .get("/users");
+        .get("/users")
+        .send({_token: testUserToken1});
+    
       expect(users.body.users.length).toEqual(4);
     });
 
     test("cannot delete user if non-existent username", async function () {
       let response = await request(app)
         .delete("/users/user1000")
+        .send({_token: testUserToken1});
 
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toEqual({
-        "status": 404,
-        "message": "There is no user with an username: user1000"
-      });
+      expect(response.statusCode).toBe(401);
+      // expect(response.body).toEqual({
+      //   "status": 404,
+      //   "message": "There is no user with an username: user1000"
+      // });
+      expect(response.body).toEqual({ status: 401, message: "Unauthorized" });
+    });
+
+    test("cannot delete user if NOT Authenticated", async function () {
+      let response = await request(app)
+        .delete("/users/user1000");
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({ status: 401, message: "Unauthorized" });
     });
 
   });

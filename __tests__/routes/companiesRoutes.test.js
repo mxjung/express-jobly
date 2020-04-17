@@ -1,10 +1,15 @@
 const request = require("supertest");
+const jwt = require("jsonwebtoken");
+const { SECRET_KEY } = require("../../config");
 
 const app = require("../../app");
 const db = require("../../db");
 const Company = require("../../models/company");
 
 process.env.NODE_ENV = 'test';
+
+// Global Variable Token for user1
+let testUserToken1;
 
 describe("Message Routes Test", function () {
   beforeEach(async function () {
@@ -33,6 +38,10 @@ describe("Message Routes Test", function () {
         date_posted
             )       
       VALUES (100002, 'Front end developer',120000, 0.05,'rithm',current_timestamp)`)
+
+    // we'll need tokens for future requests
+    const testUser1 = { username: 'user1', is_admin: true };
+    testUserToken1 = jwt.sign(testUser1, SECRET_KEY);
   })
 
   /** GET / => {companies: [company, ...]}  */
@@ -40,10 +49,22 @@ describe("Message Routes Test", function () {
   describe("GET /companies/", function () {
     test("can see all companies", async function () {
       let response = await request(app)
-        .get("/companies/");
+        .get("/companies/")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(200);
       expect(response.body.companies.length).toEqual(3);
+    });
+
+    test("cannot see companies if NOT logged in", async function () {
+      let response = await request(app)
+        .get("/companies/")
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({
+        message: 'Unauthorized',
+        status: 401
+      });
     });
   });
 
@@ -80,7 +101,8 @@ describe("Message Routes Test", function () {
   describe("GET /companies/:handle", function () {
     test("can get one company", async function () {
       let response = await request(app)
-        .get("/companies/rithm");
+        .get("/companies/rithm")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(200);
       expect(response.body.company.name).toEqual("rithm school");
@@ -91,9 +113,21 @@ describe("Message Routes Test", function () {
 
     test("Can't get company that doesn't exist", async function () {
       let response = await request(app)
-        .get("/companies/jetWest");
+        .get("/companies/jetWest")
+        .send({_token: testUserToken1});
 
       expect(response.statusCode).toBe(404);
+    });
+
+    test("Can't get company if NOT logged in", async function () {
+      let response = await request(app)
+        .get("/companies/rithm");
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body).toEqual({
+        message: 'Unauthorized',
+        status: 401
+      });
     });
   });
 
@@ -141,7 +175,9 @@ describe("Message Routes Test", function () {
 
       // Check we only have 2 companies left now
       const companies = await request(app)
-        .get("/companies");
+        .get("/companies")
+        .send({_token: testUserToken1});
+
       expect(companies.body.companies.length).toEqual(2);
     });
 

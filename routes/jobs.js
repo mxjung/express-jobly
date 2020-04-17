@@ -4,6 +4,7 @@ const ExpressError = require("../helpers/expressError");
 const jsonschema = require("jsonschema");
 const jobSchema = require("../schemas/jobschema.json");
 const jobPatchSchema = require("../schemas/jobPatch.json");
+const { ensureLoggedIn } = require('../middleware/authenticate');
 
 const router = new express.Router();
 
@@ -30,7 +31,9 @@ router.post("/", async function (req, res, next) {
 
 /** GET /jobs => {jobs: [job, ...]}  */
 
-router.get("/", async function (req, res, next) {
+router.get("/", 
+  ensureLoggedIn,
+  async function (req, res, next) {
   const searchTerms = req.query;
   let jobs;
 
@@ -52,7 +55,9 @@ router.get("/", async function (req, res, next) {
  * This should return a single job found by its id.
  * This should return JSON of {job: jobData}
  */
-router.get("/:id", async function (req, res, next) {
+router.get("/:id", 
+  ensureLoggedIn,
+  async function (req, res, next) {
 
   try {
     const id = Number(req.params.id);

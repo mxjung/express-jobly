@@ -4,6 +4,9 @@ const ExpressError = require("../helpers/expressError");
 const jsonschema = require("jsonschema");
 const userSchema = require("../schemas/userSchema.json");
 const userUpdateSchema = require("../schemas/userUpdate.json");
+const jwt = require("jsonwebtoken");
+const { SECRET_KEY } = require("../config");
+const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/authenticate');
 
 const router = new express.Router();
 
@@ -22,8 +25,12 @@ router.post("/", async function (req, res, next) {
       }); 
     }
 
-    let user = await User.create(req.body);
-    return res.status(201).json({ user });
+    let {username, is_admin} = await User.create(req.body);
+    let token = jwt.sign({ username, is_admin }, SECRET_KEY);
+
+    return res.status(201).json({ token });
+
+    // return res.status(201).json({ user });
   } catch (err) {
     return next(err);
   }
@@ -63,7 +70,9 @@ router.get("/:username", async function (req, res, next) {
  * This should update an existing user and return the updated user.
  * This should return JSON of {user: userData}
  */
-router.patch("/:username", async function (req, res, next) {
+router.patch("/:username", 
+  ensureCorrectUser,
+  async function (req, res, next) {
 
   try {
 
@@ -93,7 +102,9 @@ router.patch("/:username", async function (req, res, next) {
  * This should remove an existing user and return a message.
  * This should return JSON of {message: "User deleted"}
  */
-router.delete("/:username", async function (req, res, next) {
+router.delete("/:username", 
+  ensureCorrectUser,
+  async function (req, res, next) {
   try {
     await User.deleteUser(req.params.username);
     return res.json({ message: "User deleted" });

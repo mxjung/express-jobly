@@ -8,11 +8,15 @@ const companyRoutes = require("./routes/companies");
 const jobRoutes = require("./routes/jobs");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
+const { authenticateJWT } = require("./middleware/authenticate");
 
 app.use(express.json());
 
 // add logging system
 app.use(morgan("tiny"));
+
+// Authentication middleware
+app.use(authenticateJWT);
 
 // Routes
 app.use("/", authRoutes);
