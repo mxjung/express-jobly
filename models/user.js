@@ -116,41 +116,75 @@ class User {
    *
    * */
 
-  static async updateUser(data, username) {
+  static async updateUser(data, user_name) {
     let userRes;
     try {
-      const { query, values } = sqlForPartialUpdate('users', data, 'username', username);
+      const { query, values } = sqlForPartialUpdate('users', data, 'username', user_name);
       userRes = await db.query(query, values);
     } catch (err) {
       throw new ExpressError(err.message, 400)
     }
 
     if (userRes.rows.length === 0) {
-      throw new ExpressError(`There is no record for ${username}, cannot update`, 404);
+      throw new ExpressError(`There is no record for ${user_name}, cannot update`, 404);
     }
-    delete userRes.rows[0].password;
+
+    // Just grab information we want
+    let {username, first_name, last_name, email, photo_url} = userRes.rows[0];
+    // delete userRes.rows[0].password;
+
+    return {username, first_name, last_name, email, photo_url};
+  }
+
+  /** Deletes user from DB with input username:
+   *
+   * */
+
+  static async deleteUser(username) {
+
+    const userRes = await db.query(
+      `DELETE FROM users 
+         WHERE username = $1 
+         RETURNING username`,
+      [username]);
+
+    if (userRes.rows.length === 0) {
+      throw new ExpressError(`There is no user with an username: ${username}`, 404);
+    }
     return userRes.rows[0];
   }
 
-//   /** Deletes job from DB with input id:
-//    *
-//    * */
+  /** Authenticates user from DB:
+   *
+   * */
 
-//   static async deleteJob(id) {
+  static async authenticate(username, password) { 
+    const result = await db.query(
+      `SELECT password FROM users WHERE username = $1`,
+      [username]);
+    const user = result.rows[0];
 
-//     const jobRes = await db.query(
-//       `DELETE FROM jobs 
-//          WHERE id = $1 
-//          RETURNING id`,
-//       [id]);
+    if (!result.rows[0]) {
+      throw new ExpressError(`No such user: ${username}`, 400);
+    }
 
-//     if (jobRes.rows.length === 0) {
-//       throw { message: `There is no job with an id: ${id}`, status: 404 };
-//       // throw express error********
-//     }
+    const login = await bcrypt.compare(password, user.password);
+    return login && user;
+  }
 
-//     return jobRes.rows[0];
-//   }
+  static async adminAuthenticate(username) {
+    const result = await db.query(
+      `SELECT is_admin FROM users WHERE username = $1`,
+      [username]);
+    const user_admin = result.rows[0];
+
+    if (!result.rows[0]) {
+      throw new ExpressError(`No such user`, 400);
+    }
+
+    return user_admin;
+  }
+
 }
 
 

@@ -89,18 +89,18 @@ router.patch("/:username", async function (req, res, next) {
   }
 });
 
-// /** DELETE
-//  * This should remove an existing job and return a message.
-//  * This should return JSON of {message: "Job deleted"}
-//  */
-// router.delete("/:id", async function (req, res, next) {
-//   try {
-//     await Job.deleteJob(req.params.id);
-//     return res.json({ message: "Job deleted" });
-//   } catch (err) {
-//     return next(err)
-//   }
-// });
+/** DELETE
+ * This should remove an existing user and return a message.
+ * This should return JSON of {message: "User deleted"}
+ */
+router.delete("/:username", async function (req, res, next) {
+  try {
+    await User.deleteUser(req.params.username);
+    return res.json({ message: "User deleted" });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 
 module.exports = router;

@@ -177,8 +177,7 @@ describe("User Routes Test", function () {
         "first_name": "changed again",
         "last_name": "this too",
         "email": "emailchanged",
-        "photo_url": "photo4",
-        "is_admin": false
+        "photo_url": "photo4"
       });
     });
     test("Fails for user that doesn't exist", async function () {
@@ -205,6 +204,36 @@ describe("User Routes Test", function () {
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toEqual('duplicate key value violates unique constraint \"users_email_key\"');
     });
+  });
+
+
+  describe("DELETE /users/:username", function () {
+    test("can delete user", async function () {
+      let response = await request(app)
+        .delete("/users/user1")
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual({
+        "message": "User deleted"
+      });
+
+      // Check we only have 4 users left now
+      const users = await request(app)
+        .get("/users");
+      expect(users.body.users.length).toEqual(4);
+    });
+
+    test("cannot delete user if non-existent username", async function () {
+      let response = await request(app)
+        .delete("/users/user1000")
+
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toEqual({
+        "status": 404,
+        "message": "There is no user with an username: user1000"
+      });
+    });
+
   });
 });
 

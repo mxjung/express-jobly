@@ -7,6 +7,7 @@ const app = express();
 const companyRoutes = require("./routes/companies");
 const jobRoutes = require("./routes/jobs");
 const userRoutes = require("./routes/users");
+const authRoutes = require("./routes/auth");
 
 app.use(express.json());
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(morgan("tiny"));
 
 // Routes
+app.use("/", authRoutes);
 app.use("/users", userRoutes);
 app.use("/companies", companyRoutes);
 app.use("/jobs", jobRoutes);

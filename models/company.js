@@ -131,9 +131,9 @@ class Company {
    *
    * */
 
-  static async patchCompany(data, handle) {
+  static async patchCompany(data, company_handle) {
 
-    const { query, values } = sqlForPartialUpdate('companies', data, 'handle', handle);
+    const { query, values } = sqlForPartialUpdate('companies', data, 'handle', company_handle);
     let companyRes;
 
     try {
@@ -143,9 +143,12 @@ class Company {
     }
 
     if (companyRes.rows.length === 0) {
-      throw new expressError(`There is no record for ${handle}, cannot update`, 404);
+      throw new expressError(`There is no record for ${company_handle}, cannot update`, 404);
     }
-    return companyRes.rows[0];
+
+    // Return information that we want 
+    const {handle, name, num_employees, description, logo_url} = companyRes.rows[0];
+    return {handle, name, num_employees, description, logo_url};
   }
 
   /** Return one company object {handle} for given handle after deleting:

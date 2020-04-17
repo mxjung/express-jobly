@@ -101,19 +101,22 @@ class Job {
    *
    * */
 
-  static async patchJob(data, id) {
+  static async patchJob(data, job_id) {
     let jobRes;
     try {
-      const { query, values } = sqlForPartialUpdate('jobs', data, 'id', id);
+      const { query, values } = sqlForPartialUpdate('jobs', data, 'id', job_id);
       jobRes = await db.query(query, values);
     } catch (err) {
       throw new expressError(err.message, 400)
     }
 
     if (jobRes.rows.length === 0) {
-      throw new expressError(`There is no record for job with id: ${id}, cannot update`, 404);
+      throw new expressError(`There is no record for job with id: ${job_id}, cannot update`, 404);
     }
-    return jobRes.rows[0];
+
+    // Return just the information from jobRes
+    const {id, title, salary, equity, company_handle, date_posted} = jobRes.rows[0];
+    return {id, title, salary, equity, company_handle, date_posted};
   }
 
   /** Deletes job from DB with input id:
